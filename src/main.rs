@@ -6,7 +6,7 @@ use quicksilver::{
     Future, Result,
 };
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 struct Game {
     title: Asset<Image>,
@@ -161,16 +161,24 @@ impl State for Game {
 
         let player = &mut self.entities[self.player_id];
         if window.keyboard()[Key::Left] == Pressed {
-            player.pos.x -= 1.0;
+            if player.pos.x > 1.0 {
+                player.pos.x -= 1.0;
+            }
         }
         if window.keyboard()[Key::Right] == Pressed {
-            player.pos.x += 1.0;
+            if player.pos.x < self.map_size.x - 2.0 {
+                player.pos.x += 1.0;
+            }
         }
         if window.keyboard()[Key::Up] == Pressed {
-            player.pos.y -= 1.0;
+            if player.pos.y > 1.0 {
+                player.pos.y -= 1.0;
+            }
         }
         if window.keyboard()[Key::Down] == Pressed {
-            player.pos.y += 1.0;
+            if player.pos.y < self.map_size.y - 2.0 {
+                player.pos.y += 1.0;
+            }
         }
         if window.keyboard()[Key::Escape].is_down() {
             window.close();
@@ -215,20 +223,36 @@ impl State for Game {
         let tile_size_px = self.tile_size_px;
         let offset_px = Vector::new(50, 120);
 
+        // Entity position hash set
+        let entity_positions: HashSet<(i32, i32)> = self
+            .entities
+            .iter()
+            .map(|e| (e.pos.x as i32, e.pos.y as i32))
+            .collect();
+
+        // Draw tiles
         let (tileset, map) = (&mut self.tileset, &self.map);
         tileset.execute(|tileset| {
             for tile in map.iter() {
-                if let Some(image) = tileset.get(&tile.glyph) {
-                    let pos_px = tile.pos.times(tile_size_px);
-                    window.draw(
-                        &Rectangle::new(offset_px + pos_px, image.area().size()),
-                        Blended(&image, tile.color),
-                    );
+
+                // Tile pos as a tuple to check for entity overlap
+                let tile_pos = (tile.pos.x as i32, tile.pos.y as i32);
+
+                if !entity_positions.contains(&tile_pos) {
+                    if let Some(image) = tileset.get(&tile.glyph) {
+                        let pos_px = tile.pos.times(tile_size_px);
+                        window.draw(
+                            &Rectangle::new(offset_px + pos_px, image.area().size()),
+                            Blended(&image, tile.color),
+                        );
+                    }
                 }
             }
             Ok(())
         })?;
 
+
+        // Draw entities
         let (tileset, entities) = (&mut self.tileset, &self.entities);
         tileset.execute(|tileset| {
             for entity in entities.iter() {
