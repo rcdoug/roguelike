@@ -7,6 +7,7 @@ use quicksilver::{
 };
 
 use std::collections::{HashMap, HashSet};
+use rand::Rng;
 
 struct Game {
     title: Asset<Image>,
@@ -36,31 +37,33 @@ struct Entity {
     max_hp: i32,
 }
 
-fn generate_entities() -> Vec<Entity> {
+fn generate_entities(map_size: Vector) -> Vec<Entity> {
+    let mut rng = rand::thread_rng();
+
     vec![
         Entity {
-            pos: Vector::new(9, 6),
+            pos: Vector::new(rng.gen_range(1..map_size.x as i32 - 1), rng.gen_range(1..map_size.y as i32 - 1)),
             glyph: 'g',
             color: Color::RED,
             hp: 1,
             max_hp: 1,
         },
         Entity {
-            pos: Vector::new(2, 4),
+            pos: Vector::new(rng.gen_range(1..map_size.x as i32 - 1), rng.gen_range(1..map_size.y as i32 - 1)),
             glyph: 'g',
             color: Color::RED,
             hp: 1,
             max_hp: 1,
         },
         Entity {
-            pos: Vector::new(7, 5),
+            pos: Vector::new(rng.gen_range(1..map_size.x as i32 - 1), rng.gen_range(1..map_size.y as i32 - 1)),
             glyph: '%',
             color: Color::PURPLE,
             hp: 0,
             max_hp: 0,
         },
         Entity {
-            pos: Vector::new(4, 8),
+            pos: Vector::new(rng.gen_range(1..map_size.x as i32 - 1), rng.gen_range(1..map_size.y as i32 - 1)),
             glyph: '%',
             color: Color::PURPLE,
             hp: 0,
@@ -106,9 +109,9 @@ impl State for Game {
             )
         }));
 
-        let map_size = Vector::new(20, 15);
+        let map_size = Vector::new(25, 15);
         let map = generate_map(map_size);
-        let mut entities = generate_entities();
+        let mut entities = generate_entities(map_size);
 
         let player_id = entities.len();
         entities.push(Entity {
@@ -160,22 +163,22 @@ impl State for Game {
         use quicksilver::input::ButtonState::*;
 
         let player = &mut self.entities[self.player_id];
-        if window.keyboard()[Key::Left] == Pressed {
+        if window.keyboard()[Key::Left] == Pressed || window.keyboard()[Key::A] == Pressed {
             if player.pos.x > 1.0 {
                 player.pos.x -= 1.0;
             }
         }
-        if window.keyboard()[Key::Right] == Pressed {
+        if window.keyboard()[Key::Right] == Pressed || window.keyboard()[Key::D] == Pressed {
             if player.pos.x < self.map_size.x - 2.0 {
                 player.pos.x += 1.0;
             }
         }
-        if window.keyboard()[Key::Up] == Pressed {
+        if window.keyboard()[Key::Up] == Pressed || window.keyboard()[Key::W] == Pressed {
             if player.pos.y > 1.0 {
                 player.pos.y -= 1.0;
             }
         }
-        if window.keyboard()[Key::Down] == Pressed {
+        if window.keyboard()[Key::Down] == Pressed || window.keyboard()[Key::S] == Pressed {
             if player.pos.y < self.map_size.y - 2.0 {
                 player.pos.y += 1.0;
             }
